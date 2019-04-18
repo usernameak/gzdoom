@@ -1109,7 +1109,7 @@ void GLSprite::Process(HWDrawInfo *di, AActor* thing, sector_t * sector, area_t 
 //
 //==========================================================================
 
-void GLSprite::ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *sector)//, int shade, int fakeside)
+void GLSprite::ProcessParticle (HWDrawInfo *di, FParticle *particle, sector_t *sector)//, int shade, int fakeside)
 {
 	if (particle->alpha==0) return;
 
@@ -1152,7 +1152,7 @@ void GLSprite::ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *
 	}
 
 	trans=particle->alpha;
-	RenderStyle = STYLE_Translucent;
+	RenderStyle = particle->renderstyle;
 	OverrideShader = 0;
 
 	ThingColor = particle->color;
@@ -1164,15 +1164,40 @@ void GLSprite::ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *
 	bottomclip = -LARGE_VALUE;
 	index = 0;
 
+	EParticleStyle pstyle = particle->style;
+	if (pstyle == PARTSTYLE_Default)
+	{
+		switch(gl_particles_style)
+		{
+			case 0:
+			default:
+				pstyle = PARTSTYLE_Square;
+			break;
+			case 1:
+				pstyle = PARTSTYLE_Round;
+			break;
+			case 2:
+				pstyle = PARTSTYLE_Smooth;
+			break;
+		}
+	}
+
+	FTexture *tex = nullptr;
+
 	// [BB] Load the texture for round or smooth particles
-	if (gl_particles_style)
+	if (pstyle != PARTSTYLE_Square)
 	{
 		FTextureID lump;
-		if (gl_particles_style == 1)
+
+		if(pstyle == PARTSTYLE_Textured)
+		{
+			lump = particle->texture;
+		}
+		else if (pstyle == PARTSTYLE_Round)
 		{
 			lump = TexMan.glPart2;
 		}
-		else if (gl_particles_style == 2)
+		else if (pstyle == PARTSTYLE_Smooth)
 		{
 			lump = TexMan.glPart;
 		}
@@ -1180,6 +1205,7 @@ void GLSprite::ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *
 
 		if (lump.isValid())
 		{
+			tex = TexMan.GetTexture(lump);
 			gltexture = FMaterial::ValidateTexture(lump, true, false);
 			translation = 0;
 
@@ -1204,21 +1230,29 @@ void GLSprite::ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *
 	y = float(particle->Pos.Y) + yvf;
 	z = float(particle->Pos.Z) + zvf;
 	
-	float factor;
-	if (gl_particles_style == 1) factor = 1.3f / 7.f;
-	else if (gl_particles_style == 2) factor = 2.5f / 7.f;
-	else factor = 1 / 7.f;
-	float scalefac=particle->size * factor;
+	float xfactor = 1.0f;
+	float yfactor = 1.0f;
+	if (pstyle == PARTSTYLE_Round) xfactor = yfactor = 1.3f / 7.f;
+	else if (pstyle == PARTSTYLE_Smooth) xfactor = yfactor = 2.5f / 7.f;
+	else if (pstyle == PARTSTYLE_Square) xfactor = yfactor = 1 / 7.f;
+	else if (pstyle == PARTSTYLE_Textured)
+	{
+		xfactor = tex->GetDisplayWidth();
+		yfactor = tex->GetDisplayHeight();
+	}
+
+	float xscalefac=particle->size * xfactor;
+	float yscalefac=particle->size * yfactor;
 
 	float viewvecX = vp.ViewVector.X;
 	float viewvecY = vp.ViewVector.Y;
 
-	x1=x+viewvecY*scalefac;
-	x2=x-viewvecY*scalefac;
-	y1=y-viewvecX*scalefac;
-	y2=y+viewvecX*scalefac;
-	z1=z-scalefac;
-	z2=z+scalefac;
+	x1=x-viewvecY*xscalefac;
+	x2=x+viewvecY*xscalefac;
+	y1=y+viewvecX*yscalefac;
+	y2=y-viewvecX*yscalefac;
+	z1=z+yscalefac;
+	z2=z-yscalefac;
 
 	depth = FloatToFixed((x - vp.Pos.X) * vp.TanCos + (y - vp.Pos.Y) * vp.TanSin);
 
@@ -1227,7 +1261,7 @@ void GLSprite::ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *
 	fullbright = !!particle->bright;
 	
 	// [BB] Translucent particles have to be rendered without the alpha test.
-	if (gl_particles_style != 2 && trans>=1.0f-FLT_EPSILON) hw_styleflags = STYLEHW_Solid;
+	if (pstyle != PARTSTYLE_Textured && pstyle != PARTSTYLE_Smooth && trans>=1.0f-FLT_EPSILON) hw_styleflags = STYLEHW_Solid;
 	else hw_styleflags = STYLEHW_NoAlphaTest;
 
 	if (sector->e->XFloor.lightlist.Size() != 0 && !di->isFullbrightScene() && !fullbright)

@@ -190,7 +190,7 @@ void RenderPolyScene::RenderSubsector(PolyRenderThread *thread, subsector_t *sub
 	int subsectorIndex = sub->Index();
 	for (int i = Level->ParticlesInSubsec[subsectorIndex]; i != NO_PARTICLE; i = Level->Particles[i].snext)
 	{
-		particle_t *particle = &Level->Particles[i];
+		FParticle *particle = &Level->Particles[i];
 		thread->TranslucentObjects.push_back(thread->FrameMemory->NewObject<PolyTranslucentParticle>(particle, sub, subsectorDepth, CurrentViewpoint->StencilValue));
 	}
 }

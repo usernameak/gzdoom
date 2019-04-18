@@ -15,7 +15,7 @@
 #pragma warning(disable:4244)
 #endif
 
-struct particle_t;
+struct FParticle;
 class FCanvasTexture;
 class FFlatVertexBuffer;
 class FSkyVertexBuffer;

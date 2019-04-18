@@ -627,7 +627,7 @@ public:
 	// [RH] particle globals
 	uint32_t			ActiveParticles;
 	uint32_t			InactiveParticles;
-	TArray<particle_t>	Particles;
+	TArray<FParticle>	Particles;
 	TArray<uint16_t>	ParticlesInSubsec;
 	FThinkerCollection Thinkers;
 

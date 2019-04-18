@@ -128,7 +128,7 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLig
 	}
 }
 
-void HWDrawInfo::GetDynSpriteLight(AActor *thing, particle_t *particle, float *out)
+void HWDrawInfo::GetDynSpriteLight(AActor *thing, FParticle *particle, float *out)
 {
 	if (thing != NULL)
 	{

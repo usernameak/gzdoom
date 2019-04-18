@@ -1925,4 +1925,17 @@ DEFINE_FIELD_X(FLineTraceData, FLineTraceData, LinePart);
 DEFINE_FIELD_X(FLineTraceData, FLineTraceData, SectorPlane);
 DEFINE_FIELD_X(FLineTraceData, FLineTraceData, HitType);
 
-
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, Pos);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, Vel);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, Acc);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, size);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, sizestep);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, ttl);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, bright);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, notimefreeze);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, fadestep);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, alpha);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, color);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, renderstyle);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, style);
+DEFINE_FIELD_X(FParticleOptions, FParticleOptions, texture);

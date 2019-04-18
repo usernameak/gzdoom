@@ -34,6 +34,7 @@
 #pragma once
 
 #include "vectors.h"
+#include "r_data/renderstyle.h"
 
 #define FX_ROCKET			0x00000001
 #define FX_GRENADE			0x00000002
@@ -45,8 +46,40 @@ struct FLevelLocals;
 
 // [RH] Particle details
 
-struct particle_t
+enum EParticleStyle
 {
+	PARTSTYLE_Default,
+	PARTSTYLE_Square,
+	PARTSTYLE_Round,
+	PARTSTYLE_Smooth,
+	PARTSTYLE_Textured
+};
+
+struct FParticleOptions
+{
+	DVector3 Pos;
+	DVector3 Vel;
+	DVector3 Acc;
+	double	size;
+	double	sizestep;
+	int32_t	ttl;
+	uint8_t	bright;
+	bool	notimefreeze;
+	float	fadestep;
+	float	alpha;
+	PalEntry color;
+	ERenderStyle renderstyle;
+	EParticleStyle style;
+	FTextureID texture;
+};
+
+struct FParticle
+{
+	inline FParticle() {
+		style = PARTSTYLE_Default;
+		renderstyle = STYLE_Translucent;
+		texture.SetNull();
+	}
 	DVector3 Pos;
 	DVector3 Vel;
 	DVector3 Acc;
@@ -59,8 +92,12 @@ struct particle_t
 	float	fadestep;
 	float	alpha;
 	int		color;
+	ERenderStyle renderstyle;
 	uint16_t	tnext;
 	uint16_t	snext;
+	EParticleStyle style;
+	FTextureID texture;
+	void LoadFromOptions(const FParticleOptions &options);
 };
 
 const uint16_t NO_PARTICLE = 0xffff;
@@ -69,11 +106,12 @@ void P_InitParticles(FLevelLocals *);
 void P_ClearParticles (FLevelLocals *Level);
 void P_FindParticleSubsectors (FLevelLocals *Level);
 
+FParticle *NewParticle (FLevelLocals *Level);
 
 class AActor;
 
-particle_t *JitterParticle (FLevelLocals *Level, int ttl);
-particle_t *JitterParticle (FLevelLocals *Level, int ttl, double drift);
+FParticle *JitterParticle (FLevelLocals *Level, int ttl);
+FParticle *JitterParticle (FLevelLocals *Level, int ttl, double drift);
 
 void P_ThinkParticles (FLevelLocals *Level);
 void P_SpawnParticle(FLevelLocals *Level, const DVector3 &pos, const DVector3 &vel, const DVector3 &accel, PalEntry color, double startalpha, int lifetime, double size, double fadestep, double sizestep, int flags = 0);

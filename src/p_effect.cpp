@@ -99,9 +99,9 @@ static const struct ColorList {
 	{NULL, 0, 0, 0 }
 };
 
-inline particle_t *NewParticle (FLevelLocals *Level)
+inline FParticle *NewParticle (FLevelLocals *Level)
 {
-	particle_t *result = nullptr;
+	FParticle *result = nullptr;
 	if (Level->InactiveParticles != NO_PARTICLE)
 	{
 		result = &Level->Particles[Level->InactiveParticles];
@@ -110,6 +110,40 @@ inline particle_t *NewParticle (FLevelLocals *Level)
 		Level->ActiveParticles = uint32_t(result - Level->Particles.Data());
 	}
 	return result;
+}
+
+static TMap<int, int> ColorSaver;
+
+static uint32_t ParticleColor(int rgb)
+{
+	int *val;
+	int stuff;
+
+	val = ColorSaver.CheckKey(rgb);
+	if (val != NULL)
+	{
+		return *val;
+	}
+	stuff = rgb | (ColorMatcher.Pick(RPART(rgb), GPART(rgb), BPART(rgb)) << 24);
+	ColorSaver[rgb] = stuff;
+	return stuff;
+}
+
+void FParticle::LoadFromOptions(const FParticleOptions &options) {
+	Pos = options.Pos;
+	Vel = options.Vel;
+	Acc = options.Acc;
+	size = options.size;
+	sizestep = options.sizestep;
+	ttl = options.ttl;
+	bright = options.bright;
+	notimefreeze = options.notimefreeze;
+	fadestep = options.fadestep;
+	alpha = options.alpha;
+	color = ParticleColor(options.color);
+	renderstyle = options.renderstyle;
+	style = options.style;
+	texture = options.texture;
 }
 
 //
@@ -138,7 +172,7 @@ void P_InitParticles (FLevelLocals *Level)
 void P_ClearParticles (FLevelLocals *Level)
 {
 	int i = 0;
-	memset (Level->Particles.Data(), 0, Level->Particles.Size() * sizeof(particle_t));
+	memset (Level->Particles.Data(), 0, Level->Particles.Size() * sizeof(FParticle));
 	Level->ActiveParticles = NO_PARTICLE;
 	Level->InactiveParticles = 0;
 	for (auto &p : Level->Particles)
@@ -173,23 +207,6 @@ void P_FindParticleSubsectors (FLevelLocals *Level)
 	}
 }
 
-static TMap<int, int> ColorSaver;
-
-static uint32_t ParticleColor(int rgb)
-{
-	int *val;
-	int stuff;
-
-	val = ColorSaver.CheckKey(rgb);
-	if (val != NULL)
-	{
-		return *val;
-	}
-	stuff = rgb | (ColorMatcher.Pick(RPART(rgb), GPART(rgb), BPART(rgb)) << 24);
-	ColorSaver[rgb] = stuff;
-	return stuff;
-}
-
 static uint32_t ParticleColor(int r, int g, int b)
 {
 	return ParticleColor(MAKERGB(r, g, b));
@@ -213,7 +230,7 @@ void P_InitEffects ()
 void P_ThinkParticles (FLevelLocals *Level)
 {
 	int i;
-	particle_t *particle, *prev;
+	FParticle *particle, *prev;
 
 	i = Level->ActiveParticles;
 	prev = NULL;
@@ -232,7 +249,7 @@ void P_ThinkParticles (FLevelLocals *Level)
 		particle->size += particle->sizestep;
 		if (particle->alpha <= 0 || oldtrans < particle->alpha || --particle->ttl <= 0 || (particle->size <= 0))
 		{ // The particle has expired, so free it
-			memset (particle, 0, sizeof(particle_t));
+			memset (particle, 0, sizeof(FParticle));
 			if (prev)
 				prev->tnext = i;
 			else
@@ -280,7 +297,7 @@ enum PSFlag
 void P_SpawnParticle(FLevelLocals *Level, const DVector3 &pos, const DVector3 &vel, const DVector3 &accel, PalEntry color, double startalpha, int lifetime, double size,
 	double fadestep, double sizestep, int flags)
 {
-	particle_t *particle = NewParticle(Level);
+	FParticle *particle = NewParticle(Level);
 
 	if (particle)
 	{
@@ -296,6 +313,7 @@ void P_SpawnParticle(FLevelLocals *Level, const DVector3 &pos, const DVector3 &v
 		particle->size = size;
 		particle->sizestep = sizestep;
 		particle->notimefreeze = !!(flags & PS_NOTIMEFREEZE);
+		particle->renderstyle = STYLE_Translucent;
 	}
 }
 
@@ -323,14 +341,14 @@ void P_RunEffects (FLevelLocals *Level)
 //
 // Creates a particle with "jitter"
 //
-particle_t *JitterParticle (FLevelLocals *Level, int ttl)
+FParticle *JitterParticle (FLevelLocals *Level, int ttl)
 {
 	return JitterParticle (Level, ttl, 1.0);
 }
 // [XA] Added "drift speed" multiplier setting for enhanced railgun stuffs.
-particle_t *JitterParticle (FLevelLocals *Level, int ttl, double drift)
+FParticle *JitterParticle (FLevelLocals *Level, int ttl, double drift)
 {
-	particle_t *particle = NewParticle (Level);
+	FParticle *particle = NewParticle (Level);
 
 	if (particle) {
 		int i;
@@ -344,6 +362,7 @@ particle_t *JitterParticle (FLevelLocals *Level, int ttl, double drift)
 
 		particle->alpha = 1.f;	// fully opaque
 		particle->ttl = ttl;
+		particle->renderstyle = STYLE_Translucent;
 		particle->fadestep = FADEFROMTTL(ttl);
 	}
 	return particle;
@@ -351,7 +370,7 @@ particle_t *JitterParticle (FLevelLocals *Level, int ttl, double drift)
 
 static void MakeFountain (AActor *actor, int color1, int color2)
 {
-	particle_t *particle;
+	FParticle *particle;
 
 	if (!(actor->Level->time & 1))
 		return;
@@ -383,7 +402,7 @@ void P_RunEffect (AActor *actor, int effects)
 {
 	DAngle moveangle = actor->Vel.Angle();
 
-	particle_t *particle;
+	FParticle *particle;
 	int i;
 
 	if ((effects & FX_ROCKET) && (cl_rockettrails & 1))
@@ -413,7 +432,7 @@ void P_RunEffect (AActor *actor, int effects)
 			particle->size = 2;
 		}
 		for (i = 6; i; i--) {
-			particle_t *particle = JitterParticle (actor->Level, 3 + (M_Random() & 31));
+			FParticle *particle = JitterParticle (actor->Level, 3 + (M_Random() & 31));
 			if (particle) {
 				double pathdist = M_Random() / 256.;
 				DVector3 pos = actor->Vec3Offset(
@@ -506,7 +525,7 @@ void P_DrawSplash (FLevelLocals *Level, int count, const DVector3 &pos, DAngle a
 
 	for (; count; count--)
 	{
-		particle_t *p = JitterParticle (Level, 10);
+		FParticle *p = JitterParticle (Level, 10);
 
 		if (!p)
 			break;
@@ -555,7 +574,7 @@ void P_DrawSplash2 (FLevelLocals *Level, int count, const DVector3 &pos, DAngle 
 
 	for (; count; count--)
 	{
-		particle_t *p = NewParticle (Level);
+		FParticle *p = NewParticle (Level);
 		DAngle an;
 
 		if (!p)
@@ -580,6 +599,7 @@ void P_DrawSplash2 (FLevelLocals *Level, int count, const DVector3 &pos, DAngle 
 		p->Pos.X = pos.X + ((M_Random() & 31) - 15) * an.Cos();
 		p->Pos.Y = pos.Y + ((M_Random() & 31) - 15) * an.Sin();
 		p->Pos.Z = pos.Z + (M_Random() + zadd - 128) * zspread;
+		p->renderstyle = STYLE_Translucent;
 	}
 }
 
@@ -708,7 +728,7 @@ void P_DrawRailTrail(AActor *source, TArray<SPortalHit> &portalhits, int color1,
 		deg = (double)SpiralOffset;
 		for (i = spiral_steps; i; i--)
 		{
-			particle_t *p = NewParticle (source->Level);
+			FParticle *p = NewParticle (source->Level);
 			DVector3 tempvec;
 
 			if (!p)
@@ -746,6 +766,8 @@ void P_DrawRailTrail(AActor *source, TArray<SPortalHit> &portalhits, int color1,
 				p->color = color1;
 			}
 
+			p->renderstyle = STYLE_Translucent;
+
 			if (lencount <= 0)
 			{
 				segment++;
@@ -779,7 +801,7 @@ void P_DrawRailTrail(AActor *source, TArray<SPortalHit> &portalhits, int color1,
 		{
 			// [XA] inner trail uses a different default duration (33).
 			int innerduration = (duration == 0) ? 33 : duration;
-			particle_t *p = JitterParticle (source->Level, innerduration, (float)drift);
+			FParticle *p = JitterParticle (source->Level, innerduration, (float)drift);
 
 			if (!p)
 				return;
@@ -899,7 +921,7 @@ void P_DisconnectEffect (AActor *actor)
 
 	for (i = 64; i; i--)
 	{
-		particle_t *p = JitterParticle (actor->Level, TICRATE*2);
+		FParticle *p = JitterParticle (actor->Level, TICRATE*2);
 
 		if (!p)
 			break;
@@ -915,3 +937,22 @@ void P_DisconnectEffect (AActor *actor)
 		p->size = 4;
 	}
 }
+
+
+//===========================================================================
+//
+// LevelLocals.SpawnParticle
+//
+//===========================================================================
+DEFINE_ACTION_FUNCTION(FLevelLocals, SpawnParticle)
+{
+	PARAM_SELF_STRUCT_PROLOGUE(FLevelLocals);
+	PARAM_POINTER(particle, FParticleOptions);
+
+	FParticle *newparticle = NewParticle(self);
+	if (newparticle)
+	{
+		newparticle->LoadFromOptions(*particle);
+	}
+}
+

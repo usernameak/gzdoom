@@ -69,7 +69,7 @@ EXTERN_CVAR(Bool, r_fullbrightignoresectorcolor);
 
 namespace swrenderer
 {
-	void RenderParticle::Project(RenderThread *thread, particle_t *particle, const sector_t *sector, int lightlevel, WaterFakeSide fakeside, bool foggy)
+	void RenderParticle::Project(RenderThread *thread, FParticle *particle, const sector_t *sector, int lightlevel, WaterFakeSide fakeside, bool foggy)
 	{
 		double 				tr_x, tr_y;
 		double 				tx, ty;

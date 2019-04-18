@@ -32,7 +32,7 @@
 
 EXTERN_CVAR(Int, gl_particles_style)
 
-void RenderPolyParticle::Render(PolyRenderThread *thread, particle_t *particle, subsector_t *sub, uint32_t stencilValue)
+void RenderPolyParticle::Render(PolyRenderThread *thread, FParticle *particle, subsector_t *sub, uint32_t stencilValue)
 {
 	double timefrac = r_viewpoint.TicFrac;
 	if (paused || r_viewpoint.ViewLevel->isFrozen())

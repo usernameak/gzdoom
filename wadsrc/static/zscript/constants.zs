@@ -1352,3 +1352,12 @@ enum EMonospacing
 	Mono_CellCenter = 2,
 	Mono_CellRight = 3
 };
+
+enum EParticleStyle
+{
+	PARTSTYLE_Default,
+	PARTSTYLE_Square,
+	PARTSTYLE_Round,
+	PARTSTYLE_Smooth,
+	PARTSTYLE_Textured
+};

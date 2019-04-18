@@ -23,7 +23,7 @@
 
 #include "tarray.h"
 
-struct particle_t;
+struct FParticle;
 struct FVoxel;
 
 namespace swrenderer

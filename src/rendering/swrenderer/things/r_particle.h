@@ -3,14 +3,14 @@
 #include "r_visiblesprite.h"
 #include "swrenderer/scene/r_opaque_pass.h"
 
-struct particle_t;
+struct FParticle;
 
 namespace swrenderer
 {
 	class RenderParticle : public VisibleSprite
 	{
 	public:
-		static void Project(RenderThread *thread, particle_t *, const sector_t *sector, int shade, WaterFakeSide fakeside, bool foggy);
+		static void Project(RenderThread *thread, FParticle *, const sector_t *sector, int shade, WaterFakeSide fakeside, bool foggy);
 
 	protected:
 		bool IsParticle() const override { return true; }

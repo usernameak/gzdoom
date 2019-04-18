@@ -28,7 +28,7 @@
 class RenderPolyParticle
 {
 public:
-	void Render(PolyRenderThread *thread, particle_t *particle, subsector_t *sub, uint32_t stencilValue);
+	void Render(PolyRenderThread *thread, FParticle *particle, subsector_t *sub, uint32_t stencilValue);
 
 private:
 	static uint8_t *GetParticleTexture();
@@ -43,7 +43,7 @@ private:
 class PolyTranslucentParticle : public PolyTranslucentObject
 {
 public:
-	PolyTranslucentParticle(particle_t *particle, subsector_t *sub, uint32_t subsectorDepth, uint32_t stencilValue) : PolyTranslucentObject(subsectorDepth, 0.0), particle(particle), sub(sub), StencilValue(stencilValue) { }
+	PolyTranslucentParticle(FParticle *particle, subsector_t *sub, uint32_t subsectorDepth, uint32_t stencilValue) : PolyTranslucentObject(subsectorDepth, 0.0), particle(particle), sub(sub), StencilValue(stencilValue) { }
 
 	void Render(PolyRenderThread *thread) override
 	{
@@ -51,7 +51,7 @@ public:
 		spr.Render(thread, particle, sub, StencilValue + 1);
 	}
 
-	particle_t *particle = nullptr;
+	FParticle *particle = nullptr;
 	subsector_t *sub = nullptr;
 	uint32_t StencilValue = 0;
 };

@@ -67,7 +67,6 @@ struct LinkContext
 	voidptr render_list;
 }
 
-
 class Actor : Thinker native
 {
 	const DEFAULT_HEALTH = 1000;

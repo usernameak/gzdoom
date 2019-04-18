@@ -24,7 +24,7 @@ struct FLinePortalSpan;
 struct FDynLightData;
 class VSMatrix;
 struct FSpriteModelFrame;
-struct particle_t;
+struct FParticle;
 class FRenderState;
 struct GLDecal;
 struct FSection;
@@ -369,7 +369,7 @@ public:
 	FMaterial *gltexture;
 	float trans;
 	AActor * actor;
-	particle_t * particle;
+	FParticle * particle;
 	TArray<lightlist_t> *lightlist;
 	DRotator Angles;
 
@@ -384,7 +384,7 @@ public:
 	void CreateVertices(HWDrawInfo *di);
 	void PutSprite(HWDrawInfo *di, bool translucent);
 	void Process(HWDrawInfo *di, AActor* thing,sector_t * sector, area_t in_area, int thruportal = false);
-	void ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *sector);//, int shade, int fakeside)
+	void ProcessParticle (HWDrawInfo *di, FParticle *particle, sector_t *sector);//, int shade, int fakeside)
 
 	void DrawSprite(HWDrawInfo *di, FRenderState &state, bool translucent);
 };
